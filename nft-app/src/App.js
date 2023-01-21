@@ -1,6 +1,6 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 import { Program, AnchorProvider, web3 } from '@coral-xyz/anchor';
-import idl from './idl.json';
+import idl from './idl';
 import { useState } from 'react';
 
 const opts = {
@@ -39,30 +39,34 @@ function App() {
     const provider = new AnchorProvider(
       connection, wallet, opts.preflightCommitment,
     );
+
     return provider;
   }
 
   async function create() {
     const newProvider = await getProvider()
     setProvider(newProvider)
-    setCounter(web3.Keypair.generate())
+    const keypair = web3.Keypair.generate()
+    setCounter(keypair)
 
-    const program = new Program(idl, programID);
+    const program = new Program(idl, programID, newProvider);
 
+    const counter = keypair.publicKey
+    const user = walletAddr
+    const systemProgram = programID.toString()
+    console.log(counter, )
     try {
       //const tx = await program.methods.create()
       //console.log("Sent! Signature: ", tx);
-
       await program.methods
-      .create(window.solana.publicKey)
+      .create(walletAddr)
       .accounts({
-        counter: counter.publicKey,
-        user: window.solana.publicKey,
-        systemProgram: programID,
+        counter,
+        user,
+        systemProgram
       })
-      .signers([counter])
+      .signers([keypair.publicKey, walletAddr])
       .rpc()
-
       //const counterAccount = await program.account.counter.fetch(counter.publicKey)
       //console.log(counterAccount.count)
     } catch (err) {
@@ -71,7 +75,7 @@ function App() {
   }
 
   async function increment() {
-    const program = new Program(idl, programID);
+    const program = new Program(idl, programID, provider);
 
     try {
       const tx = await program.methods.increment()
