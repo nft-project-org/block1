@@ -7,17 +7,17 @@ contract UserList {
     struct User {
         uint256 id;
         string walletAddr;
-        uint256 balance;
     }
 
     mapping(uint256 => User) public users;
 
     constructor() {
-        addUser("0xdeadbeef", 0);
+        // add dummy user
+        addUser("0xdeadbeef");
     }
 
-    function addUser(string memory _walletAddr, uint256 _balance) public {
+    function addUser(string memory _walletAddr) public {
         userCount++;
-        users[userCount] = User(userCount, _walletAddr, _balance);
+        users[userCount] = User(userCount, _walletAddr);
     }
 }
