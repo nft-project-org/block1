@@ -1,7 +1,3 @@
-
-.anchor
-.DS_Store
-target
-**/*.rs.bk
+build/
 node_modules
-test-ledger
+.prettierignore
