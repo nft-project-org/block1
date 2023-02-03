@@ -30,25 +30,40 @@ contract("UserInfo", function (accounts) {
     )
   })
 
-  it("should add a new nft address", async function () {
+  it("should add a new nft token", async function () {
     let newUser = await userInfo.getUserDetails(testAddr)
 
     let ownedNftArr = newUser.ownedNfts
+    let listedNftArr = newUser.listedNfts
     let boughtNftArr = newUser.boughtNfts
+    let favoritedNftArr = newUser.favoritedNfts
     assert.equal(ownedNftArr.length, 0)
+    assert.equal(listedNftArr.length, 0)
     assert.equal(boughtNftArr.length, 0)
+    assert.equal(favoritedNftArr.length, 0)
 
-    const testNftAddr = "0x0fe636811E78A83E9B4e2e78f1f3ec4e87c4dA61"
-    await userInfo.addOwnedNft(testAddr, testNftAddr)
-    await userInfo.addBoughtNft(testAddr, testNftAddr)
+    const testTokenId = 123
+    await userInfo.addOwnedNft(testAddr, testTokenId)
+    await userInfo.addListedNft(testAddr, testTokenId)
+    await userInfo.addBoughtNft(testAddr, testTokenId)
+    await userInfo.addFavoritedNft(testAddr, testTokenId)
 
     newUser = await userInfo.getUserDetails(testAddr)
 
     ownedNftArr = newUser.ownedNfts
+    listedNftArr = newUser.listedNfts
     boughtNftArr = newUser.boughtNfts
+    favoritedNftArr = newUser.favoritedNfts
+
+    // check that length is incremented by one
     assert.equal(ownedNftArr.length, 1)
-    assert.equal(ownedNftArr.length, 1)
-    assert.equal(boughtNftArr[0], testNftAddr)
-    assert.equal(boughtNftArr[0], testNftAddr)
+    assert.equal(listedNftArr.length, 1)
+    assert.equal(boughtNftArr.length, 1)
+    assert.equal(favoritedNftArr.length, 1)
+    // check that token in array index 0 is the token that was added
+    assert.equal(ownedNftArr[0], testTokenId)
+    assert.equal(listedNftArr[0], testTokenId)
+    assert.equal(boughtNftArr[0], testTokenId)
+    assert.equal(favoritedNftArr[0], testTokenId)
   })
 })

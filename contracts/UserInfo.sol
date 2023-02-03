@@ -6,8 +6,11 @@ contract UserInfo {
 
     struct User {
         address walletAddr;
-        address[] ownedNfts;
-        address[] boughtNfts;
+        // store token id's
+        uint256[] ownedNfts;
+        uint256[] listedNfts;
+        uint256[] boughtNfts;
+        uint256[] favoritedNfts;
     }
 
     mapping(address => User) public users;
@@ -23,19 +26,35 @@ contract UserInfo {
     }
 
     function addUser(address _walletAddr) public {
-        // init user data with empty nft arrays
-        address[] memory nftArr = new address[](0);
-        users[_walletAddr] = User(_walletAddr, nftArr, nftArr);
+        // init user data with empty arrays
+        uint256[] memory tokenArr = new uint256[](0);
+        users[_walletAddr] = User(
+            _walletAddr,
+            tokenArr,
+            tokenArr,
+            tokenArr,
+            tokenArr
+        );
         userCount++;
     }
 
-    function addOwnedNft(address _userAddr, address _nftAddr) public {
+    function addOwnedNft(address _userAddr, uint256 _tokenId) public {
         User storage user = users[_userAddr];
-        user.ownedNfts.push(_nftAddr);
+        user.ownedNfts.push(_tokenId);
     }
 
-    function addBoughtNft(address _userAddr, address _nftAddr) public {
+    function addListedNft(address _userAddr, uint256 _tokenId) public {
         User storage user = users[_userAddr];
-        user.boughtNfts.push(_nftAddr);
+        user.listedNfts.push(_tokenId);
+    }
+
+    function addBoughtNft(address _userAddr, uint256 _tokenId) public {
+        User storage user = users[_userAddr];
+        user.boughtNfts.push(_tokenId);
+    }
+
+    function addFavoritedNft(address _userAddr, uint256 _tokenId) public {
+        User storage user = users[_userAddr];
+        user.favoritedNfts.push(_tokenId);
     }
 }

@@ -17,6 +17,9 @@
   },
   "homepage": "https://github.com/nft-project-org/block1#readme",
   "dependencies": {
+    "@openzeppelin/contracts": "^4.8.1",
+    "chai": "^4.3.7",
+    "openzeppelin-test-helpers": "^0.5.1",
     "truffle-assertions": "^0.9.2"
   }
 }
