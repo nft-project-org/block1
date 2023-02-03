@@ -1,5 +1,5 @@
 // contract address
-export const USER_LIST_ADDR = "0xc722cB7b7b08f948A185cc02D47491B1324ccccE"
+export const USER_LIST_ADDR = "0x8B263579b31AC61D0494d9b22197236fec7fB104"
 
 // abi from build/contracts/*.json
 export const USER_LIST_ABI = [

@@ -1,5 +1,5 @@
-let UserList = artifacts.require("./UserList.sol")
+let UserInfo = artifacts.require("./UserInfo.sol")
 
 module.exports = function (deployer) {
-  deployer.deploy(UserList)
+  deployer.deploy(UserInfo)
 }

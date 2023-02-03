@@ -58,11 +58,11 @@ const getLibrary = ({ provider }) => {
   return new Web3(provider)
 }
 
-const ListUsers = ({ userList }) => {
+const ListUsers = ({ UserInfo }) => {
   return (
     <div>
       <h3>List of users (wallet addresses)</h3>
-      {userList.map((user) => {
+      {UserInfo.map((user) => {
         return <span key={user.id}>{user.walletAddr}</span>
       })}
     </div>
@@ -72,7 +72,7 @@ const ListUsers = ({ userList }) => {
 const App = () => {
   const [balance, setBalance] = useState(0)
   const [account, setAccount] = useState("")
-  const [userList, setUserList] = useState([])
+  const [UserInfo, setUserInfo] = useState([])
   const [userCount, setUserCount] = useState(0)
   const [contract, setContract] = useState("")
 
@@ -86,23 +86,23 @@ const App = () => {
       setBalance(web3.utils.fromWei(balance, "ether"))
 
       // use the contract
-      const userListContract = new web3.eth.Contract(
+      const UserInfoContract = new web3.eth.Contract(
         USER_LIST_ABI,
         USER_LIST_ADDR
       )
 
-      setContract(userListContract)
+      setContract(UserInfoContract)
 
       // call contract methods
-      let userAmount = await userListContract.methods.userCount().call()
+      let userAmount = await UserInfoContract.methods.userCount().call()
       setUserCount(userAmount)
 
       for (let i = 1; i <= userCount; i++) {
-        console.log(userList)
+        console.log(UserInfo)
         console.log(userCount)
-        const user = await userListContract.methods.users(i).call()
+        const user = await UserInfoContract.methods.users(i).call()
         console.log(user)
-        setUserList((prevUserList) => [...prevUserList, user])
+        setUserInfo((prevUserInfo) => [...prevUserInfo, user])
       }
     }
     loadBlockchainData()
@@ -117,7 +117,7 @@ const App = () => {
           .call()
           .then(() => {
             console.log("added account", account)
-            setUserList((prevUserList) => [...prevUserList, account])
+            setUserInfo((prevUserInfo) => [...prevUserInfo, account])
             setUserCount((prevCount) => prevCount + 1)
           })
       }
@@ -133,7 +133,7 @@ const App = () => {
       <Web3ReactProvider getLibrary={getLibrary}>
         <WalletConnect balance={balance} />
       </Web3ReactProvider>
-      <ListUsers userList={userList} />
+      <ListUsers UserInfo={UserInfo} />
     </div>
   )
 }
