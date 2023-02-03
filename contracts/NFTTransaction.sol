@@ -1,43 +1,50 @@
 // SDPX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
 
-import "../node_modules/@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
-contract NFTTransaction is ERC721 {
+contract NFTTransaction is ERC721URIStorage {
     event NftBought(address _seller, address _buyer, uint256 _price);
+    uint256 tokenID = 1;
 
     mapping(uint256 => uint256) public tokenIdToPrice;
-    mapping(uint256 => address) public tokenIdToTokenAddress;
+    mapping(uint256 => string) public tokenIdToURI;
 
     constructor() ERC721("NFTTransaction", "NFT") {}
 
-    function mint(address _addr, uint256 _tokenId) public {
-        _mint(_addr, _tokenId);
+    function mint(
+        address _to,
+        uint256 _tokenId,
+        string memory _uri
+    ) public {
+        _mint(_to, _tokenId);
+        _setTokenURI(_tokenId, _uri);
+    }
+
+    function createToken(string memory _uri) public {
+        mint(msg.sender, tokenID, _uri);
+        tokenID++;
     }
 
     function checkIfTokenExists(uint256 _tokenId) public view returns (bool) {
         return _exists(_tokenId);
     }
 
-    function verifyTokenOwner(uint256 _tokenId)
-        external
-        view
-        returns (address)
-    {
+    function getTokenOwner(uint256 _tokenId) external view returns (address) {
         return _ownerOf(_tokenId);
     }
 
     function listTokenForSale(
         uint256 _tokenId,
         uint256 _price,
-        address _tokenAddress
+        string memory _tokenURI
     ) external {
         require(_price > 0, "Price can't be 0!");
         tokenIdToPrice[_tokenId] = _price;
         // check if seller actually owns the token
         require(msg.sender == ownerOf(_tokenId), "Not owner of this token");
         tokenIdToPrice[_tokenId] = _price;
-        tokenIdToTokenAddress[_tokenId] = _tokenAddress;
+        tokenIdToURI[_tokenId] = _tokenURI;
     }
 
     function buyToken(uint256 _tokenId) external payable {
@@ -46,11 +53,21 @@ contract NFTTransaction is ERC721 {
 
         address seller = ownerOf(_tokenId);
 
+        // transfer token to buyer
         _transfer(seller, msg.sender, _tokenId);
         // set price to zero (not for sale anymore)
         tokenIdToPrice[_tokenId] = 0;
-        payable(seller).transfer(msg.value); // send the payment (ETH) to the seller
+        // transfer the payment (ETH) to seller
+        payable(seller).transfer(msg.value);
 
         emit NftBought(seller, msg.sender, msg.value);
+    }
+
+    function getTokenURI(uint256 _tokenId)
+        external
+        view
+        returns (string memory)
+    {
+        return tokenURI(_tokenId);
     }
 }

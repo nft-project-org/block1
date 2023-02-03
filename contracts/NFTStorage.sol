@@ -5,6 +5,7 @@ contract NFTStorage {
     mapping(uint256 => NftItem) public tokenIdToItem;
     struct NftItem {
         uint256 tokenId;
+        string uri;
         uint256 price;
         // creator and owner are not same. creator someone who minted. creator does not change
         address owner;
