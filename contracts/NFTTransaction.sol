@@ -4,6 +4,66 @@ pragma solidity >=0.4.22 <0.9.0;
 import "../node_modules/@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 contract NFTTransaction is ERC721URIStorage {
+    // -----------------------------------------------------------------------
+    // These are not tested
+    event NFTDeposited(uint256 indexed _tokenId, address indexed _depositor);
+
+    mapping(uint256 => address) public tokenIdToOwner;
+
+    function depositNFT(uint256 _tokenId) public {
+        // Check if the depositor is the owner of the NFT
+        require(
+            msg.sender == ownerOf(_tokenId),
+            "You are not the owner of this NFT."
+        );
+        // Add the NFT to the marketplace
+        addNFTToMarketplace(_tokenId);
+        // Emit the NFTDeposited event
+        emit NFTDeposited(_tokenId, msg.sender);
+    }
+
+    // Function to add NFT to the marketplace
+    function addNFTToMarketplace(uint256 _tokenId) internal {
+        // transfer the token to contract address
+        // todo should probably make sure that this is succesful somehow?
+        transferFrom(msg.sender, address(this), _tokenId);
+
+        // save the owner of the token
+        tokenIdToOwner[_tokenId] = msg.sender;
+
+        // Emit the NFTAddedToMarketplace event
+        emit NFTDeposited(_tokenId, msg.sender);
+    }
+
+    event NFTUnlisted(uint256 indexed _tokenId, address indexed _depositor);
+
+    function unlistNFT(uint256 _tokenId) public {
+        // Check if person trying to unlist the NFT is the owner of the NFT
+        address owner = tokenIdToOwner[_tokenId];
+
+        require(msg.sender == owner, "You are not the owner of this NFT.");
+        // Add the NFT to the marketplace
+        removeNFTFromMarketPlace(_tokenId);
+        // Emit the NFTDeposited event
+        emit NFTDeposited(_tokenId, msg.sender);
+    }
+
+    // Function to add NFT to the marketplace
+    function removeNFTFromMarketPlace(uint256 _tokenId) internal {
+        // transfer the token to contract address
+        // todo should probably make sure that this is succesful somehow?
+        transferFrom(address(this), msg.sender, _tokenId);
+
+        // delete stored token info
+        delete tokenIdToOwner[_tokenId];
+
+        // Emit the NFTUnlisted event
+        emit NFTUnlisted(_tokenId, msg.sender);
+    }
+
+    // TODO test above events and functions
+    // -----------------------------------------------------------------------
+
     event NftBought(address _seller, address _buyer, uint256 _price);
     uint256 tokenID = 1;
 
