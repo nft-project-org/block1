@@ -2,8 +2,9 @@
 pragma solidity >=0.4.22 <0.9.0;
 
 import "../node_modules/@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
 
-contract NFTTransaction is ERC721URIStorage {
+contract NFTTransaction is ERC721URIStorage, Ownable {
     // -----------------------------------------------------------------------
     // These are not tested
     event NFTDeposited(uint256 indexed _tokenId, address indexed _depositor);
@@ -49,7 +50,7 @@ contract NFTTransaction is ERC721URIStorage {
     }
 
     // Function to add NFT to the marketplace
-    function removeNFTFromMarketPlace(uint256 _tokenId) internal {
+    function removeNFTFromMarketPlace(uint256 _tokenId) public onlyOwner {
         // transfer the token to contract address
         // todo should probably make sure that this is succesful somehow?
         transferFrom(address(this), msg.sender, _tokenId);
@@ -77,7 +78,7 @@ contract NFTTransaction is ERC721URIStorage {
         uint256 _tokenId,
         string memory _uri
     ) public {
-        _mint(_to, _tokenId);
+        _safeMint(_to, _tokenId);
         _setTokenURI(_tokenId, _uri);
     }
 
@@ -92,6 +93,10 @@ contract NFTTransaction is ERC721URIStorage {
 
     function getTokenOwner(uint256 _tokenId) external view returns (address) {
         return _ownerOf(_tokenId);
+    }
+
+    function getBalance(address _walletAddr) public view returns (uint256) {
+        return balanceOf(_walletAddr);
     }
 
     function listTokenForSale(
@@ -109,12 +114,14 @@ contract NFTTransaction is ERC721URIStorage {
 
     function buyToken(uint256 _tokenId) external payable {
         uint256 price = tokenIdToPrice[_tokenId];
+        require(price > 0, "Token not for sale");
         require(msg.value == price, "Incorrect value");
+        require(balanceOf(msg.sender) >= price, "Not enough ETH for purchase!");
 
         address seller = ownerOf(_tokenId);
 
         // transfer token to buyer
-        _transfer(seller, msg.sender, _tokenId);
+        safeTransferFrom(seller, msg.sender, _tokenId);
         // set price to zero (not for sale anymore)
         tokenIdToPrice[_tokenId] = 0;
         // transfer the payment (ETH) to seller
