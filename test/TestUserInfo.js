@@ -11,11 +11,14 @@ contract("UserInfo", function (accounts) {
   it("should increment user counter", async function () {
     const userCountBefore = (await userInfo.userCount()).toNumber()
     await userInfo.addUser(testAddr)
+    await userInfo.addUser(testAddr)
+    await userInfo.addUser(testAddr)
+    await userInfo.addUser(testAddr)
     const userCountAfter = (await userInfo.userCount()).toNumber()
 
     assert.equal(
       userCountAfter,
-      userCountBefore + 1,
+      userCountBefore + 4,
       "user count should be incremented by one"
     )
   })
@@ -31,8 +34,9 @@ contract("UserInfo", function (accounts) {
   })
 
   it("should add a new nft token", async function () {
+    await userInfo.addUser(testAddr)
     let newUser = await userInfo.getUserDetails(testAddr)
-
+    console.log(newUser)
     let ownedNftArr = newUser.ownedNfts
     let listedNftArr = newUser.listedNfts
     let boughtNftArr = newUser.boughtNfts
