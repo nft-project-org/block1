@@ -3,6 +3,7 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "../node_modules/@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "../node_modules/@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "../node_modules/@openzeppelin/contracts/utils/Counters.sol";
 
 contract NFTTransaction is ERC721URIStorage, IERC721Receiver {
     event NFTListed(
@@ -17,7 +18,9 @@ contract NFTTransaction is ERC721URIStorage, IERC721Receiver {
     mapping(uint256 => address) public tokenIdToOwner;
     mapping(uint256 => uint256) public tokenIdToPrice;
     mapping(uint256 => string) public tokenIdToURI;
-    uint256 tokenID = 1;
+
+    using Counters for Counters.Counter;
+    Counters.Counter private _tokenIdCounter;
 
     constructor() ERC721("NFTTransaction", "NFT") {}
 
@@ -30,11 +33,18 @@ contract NFTTransaction is ERC721URIStorage, IERC721Receiver {
         return IERC721Receiver.onERC721Received.selector;
     }
 
-    function createToken(uint256 _tokenId, string memory _uri) public {
+    function createToken(uint256 _tokenId, string memory _uri)
+        public
+        returns (uint256)
+    {
+        _tokenIdCounter.increment();
+        // uint256 tokenId = _tokenIdCounter.current();
+        // TODO use the counter for this and fix the tests accordingly
         _safeMint(msg.sender, _tokenId);
         _setTokenURI(_tokenId, _uri);
-        // should use this id instead, but this would return receipt instead of value???
-        tokenID++;
+        // approve(receiver, tokenId);
+
+        return _tokenId;
     }
 
     function checkIfTokenExists(uint256 _tokenId) public view returns (bool) {
@@ -49,10 +59,6 @@ contract NFTTransaction is ERC721URIStorage, IERC721Receiver {
         return _walletAddr.balance;
     }
 
-    function approveToken(address _addr, uint256 _tokenId) public {
-        approve(_addr, _tokenId);
-    }
-
     function listTokenForSale(
         uint256 _tokenId,
         uint256 _price,
@@ -62,12 +68,8 @@ contract NFTTransaction is ERC721URIStorage, IERC721Receiver {
         // check if seller actually owns the token
         require(msg.sender == ownerOf(_tokenId), "Not owner of this token");
 
-        // TODO should the ownership be transferred to contract or not?
-        // can be transferred to contract in test using using instance.address as contract address
-        // but not back from contract, because instance.address is not valid when calling it via from:
-
         // transfer ownership of token to contract
-        // safeTransferFrom(msg.sender, address(this), _tokenId);
+        _transfer(msg.sender, address(this), _tokenId);
 
         // save token information
         tokenIdToOwner[_tokenId] = msg.sender;
@@ -98,22 +100,14 @@ contract NFTTransaction is ERC721URIStorage, IERC721Receiver {
         require(msg.value == price, "Incorrect value");
         require(msg.sender.balance >= price, "Not enough ETH for purchase!");
 
-        // if moving the token to contract when listing is implemented,
-        // then owner at this point is contract not seller
+        // seller is the one who deposited the token originally
         address seller = tokenIdToOwner[_tokenId];
-        require(
-            seller == ownerOf(_tokenId),
-            "seller is not owner of this token"
-        );
 
-        require(
-            _isApprovedOrOwner(msg.sender, _tokenId),
-            "Caller is not token owner or approved"
-        );
+        // Actually transfer the token to the new owner
+        _transfer(address(this), msg.sender, _tokenId);
 
-        // approve needs to be called before transfer can be made (from outside of this function)
-        // transfer token to buyer (from owner)
-        safeTransferFrom(ownerOf(_tokenId), msg.sender, _tokenId);
+        approve(address(this), _tokenId);
+
         // set price to zero (not for sale anymore)
         tokenIdToPrice[_tokenId] = 0;
         // transfer the payment (ETH) to seller

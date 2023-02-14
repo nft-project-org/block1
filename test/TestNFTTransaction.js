@@ -45,8 +45,9 @@ contract("NFTTransaction", function (accounts) {
     })
 
     // check if the token is listed for sale
+    // ownership should be transferred to contract address
     const owner = await instance.ownerOf(tokenId)
-    assert.equal(owner, accounts[0])
+    assert.equal(owner, instance.address)
 
     const listedPrice = await instance.tokenIdToPrice(tokenId)
     assert.equal(listedPrice, price)
@@ -74,11 +75,6 @@ contract("NFTTransaction", function (accounts) {
     buyerBalance = web3.utils.fromWei(buyerBalance, "ether")
     assert.isAtLeast(parseInt(buyerBalance), price)
 
-    // approve the buyer to buy the token from contract
-    // let tokenOwner = await instance.getTokenOwner(tokenId)
-    await instance.approve(accounts[1], tokenId, {
-      from: accounts[0],
-    })
     const result = await instance.buyToken(tokenId, {
       from: accounts[1],
       value: price,
@@ -115,11 +111,6 @@ contract("NFTTransaction", function (accounts) {
       from: accounts[0],
     })
     await instance.listTokenForSale(tokenId, price, tokenURI, {
-      from: accounts[0],
-    })
-
-    // approve the buyer to buy the token from contract
-    await instance.approve(accounts[1], tokenId, {
       from: accounts[0],
     })
 
