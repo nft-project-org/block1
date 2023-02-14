@@ -2,6 +2,7 @@ const NFTTransaction = artifacts.require("NFTTransaction")
 const { expect } = require("chai")
 const truffleAssert = require("truffle-assertions")
 const { BN } = require("openzeppelin-test-helpers")
+const web3 = require("web3")
 
 contract("NFTTransaction", function (accounts) {
   let nftTransaction
@@ -19,50 +20,68 @@ contract("NFTTransaction", function (accounts) {
 
   describe("check token owner", function () {
     it("should return the owner of a token", async function () {
-      const tokenId = new BN("123456789")
-      await nftTransaction.mint(accounts[0], tokenId, "testUri")
-      expect(await nftTransaction.getTokenOwner(tokenId)).to.equal(accounts[0])
+      const instance = await NFTTransaction.deployed()
+      const tokenId = 420
+      const tokenURI = "testURI"
+      await instance.createToken(tokenId, tokenURI, {
+        from: accounts[0],
+      })
+      expect(await instance.getTokenOwner(tokenId)).to.equal(accounts[0])
     })
   })
 
   it("lists a token for sale", async () => {
     const instance = await NFTTransaction.deployed()
-
-    const tokenId = 1
     const price = 100
-    const tokenAddress = accounts[0]
+    const tokenURI = "testURI"
+    const tokenId = 123456
 
-    await instance.mint(accounts[0], tokenId, "testUri")
-    await instance.listTokenForSale(tokenId, price, tokenAddress)
+    await instance.createToken(tokenId, tokenURI, {
+      from: accounts[0],
+    })
 
-    const result = await instance.tokenIdToPrice(tokenId)
-    assert.equal(
-      result.toNumber(),
-      price,
-      "Token price should be equal to the listed price"
-    )
+    await instance.listTokenForSale(tokenId, price, tokenURI, {
+      from: accounts[0],
+    })
+
+    // check if the token is listed for sale
+    const owner = await instance.ownerOf(tokenId)
+    assert.equal(owner, accounts[0])
+
+    const listedPrice = await instance.tokenIdToPrice(tokenId)
+    assert.equal(listedPrice, price)
+
+    const listedURI = await instance.tokenIdToURI(tokenId)
+    assert.equal(listedURI, tokenURI)
   })
 
   it("buys a token", async () => {
     const instance = await NFTTransaction.deployed()
     const tokenId = 123
-    const tokenPrice = 10
+    const price = 10
+    const tokenURI = "testURI"
 
     // mint the token first
-    await instance.mint(accounts[0], tokenId, "testUri")
-    await instance.listTokenForSale(tokenId, tokenPrice, accounts[0])
+    await instance.createToken(tokenId, tokenURI, {
+      from: accounts[0],
+    })
 
-    // -------------
-    // cant test this properly since initial balance is 0 in this instance
-    // -------------
+    await instance.listTokenForSale(tokenId, price, tokenURI, {
+      from: accounts[0],
+    })
 
-    // how to send funds for testing????
     let buyerBalance = await instance.getBalance(accounts[1])
-    assert.isAtLeast(parseInt(buyerBalance), tokenPrice)
+    buyerBalance = web3.utils.fromWei(buyerBalance, "ether")
+    assert.isAtLeast(parseInt(buyerBalance), price)
 
+    // approve the buyer to buy the token from contract
+    // let tokenOwner = await instance.getTokenOwner(tokenId)
+    await instance.approve(accounts[1], tokenId, {
+      from: accounts[0],
+    })
     const result = await instance.buyToken(tokenId, {
       from: accounts[1],
-      value: tokenPrice,
+      value: price,
     })
 
     // nft bought event emitted
@@ -70,7 +89,7 @@ contract("NFTTransaction", function (accounts) {
       return (
         ev._seller === accounts[0] &&
         ev._buyer === accounts[1] &&
-        ev._price.toNumber() === tokenPrice
+        ev._price.toNumber() === price
       )
     })
 
@@ -84,17 +103,29 @@ contract("NFTTransaction", function (accounts) {
   it("should revert if buyer has insufficient funds", async () => {
     const instance = await NFTTransaction.deployed()
     const tokenId = 69
-    const tokenPrice = 10
+    const tokenURI = "testURI"
+
+    let buyerBalance = await instance.getBalance(accounts[1])
+    buyerBalance = web3.utils.fromWei(buyerBalance, "ether")
+    let price = parseInt(buyerBalance) + 100
+    expect(parseInt(buyerBalance)).to.not.be.at.least(price)
 
     // mint the token first
-    await instance.mint(accounts[0], tokenId, "testUri")
-    await instance.listTokenForSale(tokenId, tokenPrice, accounts[0])
+    await instance.createToken(tokenId, tokenURI, {
+      from: accounts[0],
+    })
+    await instance.listTokenForSale(tokenId, price, tokenURI, {
+      from: accounts[0],
+    })
 
-    const buyerBalance = await instance.getBalance(accounts[1])
-    assert.isBelow(parseInt(buyerBalance), tokenPrice)
+    // approve the buyer to buy the token from contract
+    await instance.approve(accounts[1], tokenId, {
+      from: accounts[0],
+    })
 
+    // TODO why is this not failing???
     await truffleAssert.reverts(
-      instance.buyToken(tokenId, { from: accounts[1], value: tokenPrice }),
+      instance.buyToken(tokenId, { from: accounts[1], value: price }),
       "Not enough ETH for purchase!"
     )
   })
@@ -102,18 +133,20 @@ contract("NFTTransaction", function (accounts) {
   it("should revert if the price paid by the buyer is incorrect", async () => {
     const instance = await NFTTransaction.deployed()
     const tokenId = 456
+    const tokenURI = "testURI"
+    const price = 10
     // Mint a token
-    await instance.mint(accounts[0], tokenId, "testUri")
+    await instance.createToken(tokenId, tokenURI, {
+      from: accounts[0],
+    })
     // List the token for sale
-    await instance.listTokenForSale(
-      tokenId,
-      100,
-      "0x0000000000000000000000000000000000000000"
-    )
+    await instance.listTokenForSale(tokenId, price, tokenURI, {
+      from: accounts[0],
+    })
 
     // Try to buy the token with incorrect price
     await truffleAssert.reverts(
-      instance.buyToken(1, { from: accounts[1], value: 50 }),
+      instance.buyToken(tokenId, { from: accounts[1], value: 50 }),
       "Incorrect value"
     )
   })
@@ -121,10 +154,12 @@ contract("NFTTransaction", function (accounts) {
   it("gets token URI", async () => {
     const instance = await NFTTransaction.deployed()
     const tokenId = 666
-    const testUri = "testUri"
-    await instance.mint(accounts[0], tokenId, "testUri")
+    const tokenURI = "testUri"
+    await instance.createToken(tokenId, tokenURI, {
+      from: accounts[0],
+    })
     const expectedUri = await instance.getTokenURI(tokenId)
 
-    assert.equal(testUri, expectedUri)
+    assert.equal(tokenURI, expectedUri)
   })
 })
