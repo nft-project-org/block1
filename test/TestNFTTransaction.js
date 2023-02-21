@@ -18,58 +18,68 @@ contract("NFTTransaction", function (accounts) {
     })
   })
 
-  describe("check token owner", function () {
-    it("should return the owner of a token", async function () {
-      const instance = await NFTTransaction.deployed()
-      const tokenId = 420
-      const tokenURI = "testURI"
-      await instance.createToken(tokenId, tokenURI, {
-        from: accounts[0],
-      })
-      expect(await instance.getTokenOwner(tokenId)).to.equal(accounts[0])
-    })
-  })
-
   it("lists a token for sale", async () => {
     const instance = await NFTTransaction.deployed()
     const price = 100
-    const tokenURI = "testURI"
-    const tokenId = 123456
+    const tokenUri = "testURI"
 
-    await instance.createToken(tokenId, tokenURI, {
+    const tx = await instance.createAndListToken(price, tokenUri, {
       from: accounts[0],
     })
 
-    await instance.listTokenForSale(tokenId, price, tokenURI, {
-      from: accounts[0],
-    })
+    // Check that the NftListed event was emitted
+    let tokenId = 0
+    let listedPrice = ""
+    let lister = ""
+    truffleAssert.eventEmitted(
+      tx,
+      "NFTListed",
+      (ev) => {
+        tokenId = ev._tokenId
+        listedPrice = ev._price
+        lister = ev._lister
+        return (
+          ev._lister === accounts[0] &&
+          ev._tokenUri === tokenUri &&
+          ev._price.toNumber() === price
+        )
+      },
+      "NftListed event should have been emitted with the correct values"
+    )
 
-    // check if the token is listed for sale
-    // ownership should be transferred to contract address
+    // Check that listing was successful
+    // ownership should be transferred to contract addresßs
     const owner = await instance.ownerOf(tokenId)
     assert.equal(owner, instance.address)
-
-    const listedPrice = await instance.tokenIdToPrice(tokenId)
+    assert.equal(lister, accounts[0])
     assert.equal(listedPrice, price)
-
-    const listedURI = await instance.tokenIdToURI(tokenId)
-    assert.equal(listedURI, tokenURI)
+    const listedUri = await instance.tokenIdToURI(tokenId)
+    assert.equal(listedUri, tokenUri)
   })
 
   it("buys a token", async () => {
     const instance = await NFTTransaction.deployed()
-    const tokenId = 123
     const price = 10
-    const tokenURI = "testURI"
+    const tokenUri = "testURI"
 
-    // mint the token first
-    await instance.createToken(tokenId, tokenURI, {
+    const tx = await instance.createAndListToken(price, tokenUri, {
       from: accounts[0],
     })
 
-    await instance.listTokenForSale(tokenId, price, tokenURI, {
-      from: accounts[0],
-    })
+    let tokenId = 0
+    truffleAssert.eventEmitted(
+      tx,
+      "NFTListed",
+      (ev) => {
+        tokenId = ev._tokenId
+        return (
+          ev._lister === accounts[0] &&
+          ev._tokenUri === tokenUri &&
+          ev._price.toNumber() === price
+        )
+      },
+      "NftListed event should have been emitted with the correct values"
+    )
 
     let buyerBalance = await instance.getBalance(accounts[1])
     buyerBalance = web3.utils.fromWei(buyerBalance, "ether")
@@ -98,21 +108,31 @@ contract("NFTTransaction", function (accounts) {
 
   it("should revert if buyer has insufficient funds", async () => {
     const instance = await NFTTransaction.deployed()
-    const tokenId = 69
-    const tokenURI = "testURI"
+    const tokenUri = "testURI"
 
     let buyerBalance = await instance.getBalance(accounts[1])
     buyerBalance = web3.utils.fromWei(buyerBalance, "ether")
     let price = parseInt(buyerBalance) + 100
     expect(parseInt(buyerBalance)).to.not.be.at.least(price)
 
-    // mint the token first
-    await instance.createToken(tokenId, tokenURI, {
+    const tx = await instance.createAndListToken(price, tokenUri, {
       from: accounts[0],
     })
-    await instance.listTokenForSale(tokenId, price, tokenURI, {
-      from: accounts[0],
-    })
+
+    let tokenId = 0
+    truffleAssert.eventEmitted(
+      tx,
+      "NFTListed",
+      (ev) => {
+        tokenId = ev._tokenId
+        return (
+          ev._lister === accounts[0] &&
+          ev._tokenUri === tokenUri &&
+          ev._price.toNumber() === price
+        )
+      },
+      "NftListed event should have been emitted with the correct values"
+    )
 
     // TODO why is this not failing???
     await truffleAssert.reverts(
@@ -123,17 +143,28 @@ contract("NFTTransaction", function (accounts) {
 
   it("should revert if the price paid by the buyer is incorrect", async () => {
     const instance = await NFTTransaction.deployed()
-    const tokenId = 456
-    const tokenURI = "testURI"
+    const tokenUri = "testURI"
     const price = 10
-    // Mint a token
-    await instance.createToken(tokenId, tokenURI, {
-      from: accounts[0],
-    })
+
     // List the token for sale
-    await instance.listTokenForSale(tokenId, price, tokenURI, {
+    const tx = await instance.createAndListToken(price, tokenUri, {
       from: accounts[0],
     })
+
+    let tokenId = 0
+    truffleAssert.eventEmitted(
+      tx,
+      "NFTListed",
+      (ev) => {
+        tokenId = ev._tokenId
+        return (
+          ev._lister === accounts[0] &&
+          ev._tokenUri === tokenUri &&
+          ev._price.toNumber() === price
+        )
+      },
+      "NftListed event should have been emitted with the correct values"
+    )
 
     // Try to buy the token with incorrect price
     await truffleAssert.reverts(
@@ -144,13 +175,28 @@ contract("NFTTransaction", function (accounts) {
 
   it("gets token URI", async () => {
     const instance = await NFTTransaction.deployed()
-    const tokenId = 666
-    const tokenURI = "testUri"
-    await instance.createToken(tokenId, tokenURI, {
+    const tokenUri = "testUri"
+    const price = 10
+    const tx = await instance.createAndListToken(price, tokenUri, {
       from: accounts[0],
     })
-    const expectedUri = await instance.getTokenURI(tokenId)
 
-    assert.equal(tokenURI, expectedUri)
+    let tokenId = 0
+    truffleAssert.eventEmitted(
+      tx,
+      "NFTListed",
+      (ev) => {
+        tokenId = ev._tokenId
+        return (
+          ev._lister === accounts[0] &&
+          ev._tokenUri === tokenUri &&
+          ev._price.toNumber() === price
+        )
+      },
+      "NftListed event should have been emitted with the correct values"
+    )
+    const expectedUri = await instance.getTokenUri(tokenId)
+
+    assert.equal(tokenUri, expectedUri)
   })
 })

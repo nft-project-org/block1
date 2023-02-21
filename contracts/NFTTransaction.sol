@@ -9,6 +9,7 @@ contract NFTTransaction is ERC721URIStorage, IERC721Receiver {
     event NFTListed(
         uint256 indexed _tokenId,
         uint256 _price,
+        string _tokenUri,
         address indexed _lister
     );
     event NFTUnlisted(uint256 indexed _tokenId, address indexed _lister);
@@ -33,18 +34,11 @@ contract NFTTransaction is ERC721URIStorage, IERC721Receiver {
         return IERC721Receiver.onERC721Received.selector;
     }
 
-    function createToken(uint256 _tokenId, string memory _uri)
-        public
-        returns (uint256)
-    {
+    function createToken(string memory _uri) public {
         _tokenIdCounter.increment();
-        // uint256 tokenId = _tokenIdCounter.current();
-        // TODO use the counter for this and fix the tests accordingly
-        _safeMint(msg.sender, _tokenId);
-        _setTokenURI(_tokenId, _uri);
-        // approve(receiver, tokenId);
-
-        return _tokenId;
+        uint256 tokenId = _tokenIdCounter.current();
+        _safeMint(msg.sender, tokenId);
+        _setTokenURI(tokenId, _uri);
     }
 
     function checkIfTokenExists(uint256 _tokenId) public view returns (bool) {
@@ -52,31 +46,32 @@ contract NFTTransaction is ERC721URIStorage, IERC721Receiver {
     }
 
     function getTokenOwner(uint256 _tokenId) external view returns (address) {
-        return _ownerOf(_tokenId);
+        return tokenIdToOwner[_tokenId];
     }
 
     function getBalance(address _walletAddr) public view returns (uint256) {
         return _walletAddr.balance;
     }
 
-    function listTokenForSale(
-        uint256 _tokenId,
-        uint256 _price,
-        string memory _tokenURI
-    ) external {
+    function createAndListToken(uint256 _price, string memory _tokenUri)
+        public
+    {
         require(_price > 0, "Price can't be 0!");
-        // check if seller actually owns the token
-        require(msg.sender == ownerOf(_tokenId), "Not owner of this token");
+
+        _tokenIdCounter.increment();
+        uint256 tokenId = _tokenIdCounter.current();
+        _safeMint(msg.sender, tokenId);
+        _setTokenURI(tokenId, _tokenUri);
 
         // transfer ownership of token to contract
-        _transfer(msg.sender, address(this), _tokenId);
+        _transfer(msg.sender, address(this), tokenId);
 
         // save token information
-        tokenIdToOwner[_tokenId] = msg.sender;
-        tokenIdToPrice[_tokenId] = _price;
-        tokenIdToURI[_tokenId] = _tokenURI;
+        tokenIdToOwner[tokenId] = msg.sender;
+        tokenIdToPrice[tokenId] = _price;
+        tokenIdToURI[tokenId] = _tokenUri;
 
-        emit NFTListed(_tokenId, _price, msg.sender);
+        emit NFTListed(tokenId, _price, _tokenUri, msg.sender);
     }
 
     function unlistToken(uint256 _tokenId) public {
@@ -118,7 +113,7 @@ contract NFTTransaction is ERC721URIStorage, IERC721Receiver {
         emit NftBought(seller, msg.sender, msg.value);
     }
 
-    function getTokenURI(uint256 _tokenId)
+    function getTokenUri(uint256 _tokenId)
         external
         view
         returns (string memory)
