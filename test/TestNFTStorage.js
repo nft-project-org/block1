@@ -1,4 +1,4 @@
-const NFTStorage = artifacts.require("NFTStorage")
+const NFTStorage = artifacts.require("NFTContract")
 
 contract("NFTStorage", function (accounts) {
   let nftStorage
@@ -24,7 +24,7 @@ contract("NFTStorage", function (accounts) {
       isListed: isListed,
     })
 
-    let nftItem = await nftStorage.getNftDetails(testTokenId)
+    let nftItem = await nftStorage.getNftItem(testTokenId)
 
     assert.equal(nftItem.tokenId, testTokenId)
     assert.equal(nftItem.uri, uri)

@@ -1,25 +1,25 @@
-const NFTTransaction = artifacts.require("NFTTransaction")
+const NFTContract = artifacts.require("NFTContract")
 const { expect } = require("chai")
 const truffleAssert = require("truffle-assertions")
 const { BN } = require("openzeppelin-test-helpers")
 const web3 = require("web3")
 
-contract("NFTTransaction", function (accounts) {
-  let nftTransaction
+contract("NFTContract", function (accounts) {
+  let nftContract
 
   beforeEach(async function () {
-    nftTransaction = await NFTTransaction.new()
+    nftContract = await NFTContract.new()
   })
 
   describe("checkIfTokenExists", function () {
     it("should return false for non-existing tokens", async function () {
       const tokenId = new BN("123456789")
-      expect(await nftTransaction.checkIfTokenExists(tokenId)).to.equal(false)
+      expect(await nftContract.checkIfTokenExists(tokenId)).to.equal(false)
     })
   })
 
   it("lists a token for sale", async () => {
-    const instance = await NFTTransaction.deployed()
+    const instance = await NFTContract.deployed()
     const price = 100
     const tokenUri = "testURI"
 
@@ -58,7 +58,7 @@ contract("NFTTransaction", function (accounts) {
   })
 
   it("buys a token", async () => {
-    const instance = await NFTTransaction.deployed()
+    const instance = await NFTContract.deployed()
     const price = 10
     const tokenUri = "testURI"
 
@@ -107,7 +107,7 @@ contract("NFTTransaction", function (accounts) {
   })
 
   it("should revert if buyer has insufficient funds", async () => {
-    const instance = await NFTTransaction.deployed()
+    const instance = await NFTContract.deployed()
     const tokenUri = "testURI"
 
     let buyerBalance = await instance.getBalance(accounts[1])
@@ -142,7 +142,7 @@ contract("NFTTransaction", function (accounts) {
   })
 
   it("should revert if the price paid by the buyer is incorrect", async () => {
-    const instance = await NFTTransaction.deployed()
+    const instance = await NFTContract.deployed()
     const tokenUri = "testURI"
     const price = 10
 
@@ -174,7 +174,7 @@ contract("NFTTransaction", function (accounts) {
   })
 
   it("gets token URI", async () => {
-    const instance = await NFTTransaction.deployed()
+    const instance = await NFTContract.deployed()
     const tokenUri = "testUri"
     const price = 10
     const tx = await instance.createAndListToken(price, tokenUri, {

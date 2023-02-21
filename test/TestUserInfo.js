@@ -1,30 +1,47 @@
-const UserInfo = artifacts.require("UserInfo")
+const NFTContract = artifacts.require("NFTContract")
+const truffleAssert = require("truffle-assertions")
 
-contract("UserInfo", function (accounts) {
-  let userInfo
+contract("NFTContract", function (accounts) {
+  let nftContract
   const testAddr = accounts[0]
 
   beforeEach(async function () {
-    userInfo = await UserInfo.deployed()
+    nftContract = await NFTContract.new()
   })
 
   it("should increment user counter", async function () {
-    const userCountBefore = (await userInfo.userCount()).toNumber()
-    await userInfo.addUser(testAddr)
-    await userInfo.addUser(testAddr)
-    await userInfo.addUser(testAddr)
-    await userInfo.addUser(testAddr)
-    const userCountAfter = (await userInfo.userCount()).toNumber()
+    const userCountBefore = (await nftContract.getUserCount()).toNumber()
+    await nftContract.addUser(testAddr)
+    const userCountAfter = (await nftContract.getUserCount()).toNumber()
 
     assert.equal(
       userCountAfter,
-      userCountBefore + 4,
+      userCountBefore + 1,
       "user count should be incremented by one"
     )
   })
 
+  it("should fail when adding user that already exists", async function () {
+    await nftContract.addUser(testAddr)
+    const userCountBefore = (await nftContract.getUserCount()).toNumber()
+
+    await truffleAssert.reverts(
+      nftContract.addUser(testAddr),
+      "User already exists"
+    )
+
+    const userCountAfter = (await nftContract.getUserCount()).toNumber()
+    assert.equal(
+      userCountAfter,
+      userCountBefore,
+      "user count should not be incremented"
+    )
+  })
+
   it("new user's address should be correctly set", async function () {
-    const newUser = await userInfo.getUserDetails(testAddr)
+    await nftContract.addUser(testAddr)
+    const newUser = await nftContract.getUserDetails(testAddr)
+    console.log("new user: ", newUser)
     const newUserWalletAddr = newUser.walletAddr
     assert.equal(
       newUserWalletAddr,
@@ -34,8 +51,7 @@ contract("UserInfo", function (accounts) {
   })
 
   it("should add a new nft token", async function () {
-    await userInfo.addUser(testAddr)
-    let newUser = await userInfo.getUserDetails(testAddr)
+    let newUser = await nftContract.getUserDetails(testAddr)
     console.log(newUser)
     let ownedNftArr = newUser.ownedNfts
     let listedNftArr = newUser.listedNfts
@@ -47,12 +63,12 @@ contract("UserInfo", function (accounts) {
     assert.equal(favoritedNftArr.length, 0)
 
     const testTokenId = 123
-    await userInfo.addOwnedNft(testAddr, testTokenId)
-    await userInfo.addListedNft(testAddr, testTokenId)
-    await userInfo.addBoughtNft(testAddr, testTokenId)
-    await userInfo.addFavoritedNft(testAddr, testTokenId)
+    await nftContract.addOwnedNft(testAddr, testTokenId)
+    await nftContract.addListedNft(testAddr, testTokenId)
+    await nftContract.addBoughtNft(testAddr, testTokenId)
+    await nftContract.addFavoritedNft(testAddr, testTokenId)
 
-    newUser = await userInfo.getUserDetails(testAddr)
+    newUser = await nftContract.getUserDetails(testAddr)
 
     ownedNftArr = newUser.ownedNfts
     listedNftArr = newUser.listedNfts

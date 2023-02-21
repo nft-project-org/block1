@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
 
-contract NFTStorage {
-    mapping(uint256 => NftItem) public tokenIdToItem;
+library NFTStorage {
     struct NftItem {
         uint256 tokenId;
         string uri;
@@ -14,16 +13,18 @@ contract NFTStorage {
         bool isListed;
     }
 
-    function addNftToStorage(NftItem memory nftItem) public {
+    function addNftToStorage(
+        mapping(uint256 => NftItem) storage tokenIdToItem,
+        NftItem memory nftItem
+    ) public {
         uint256 id = nftItem.tokenId;
         tokenIdToItem[id] = nftItem;
     }
 
-    function getNftDetails(uint256 _tokenId)
-        public
-        view
-        returns (NftItem memory)
-    {
+    function getNftItem(
+        mapping(uint256 => NftItem) storage tokenIdToItem,
+        uint256 _tokenId
+    ) public view returns (NftItem memory) {
         return tokenIdToItem[_tokenId];
     }
 }
