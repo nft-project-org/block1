@@ -14,17 +14,49 @@ library NFTStorage {
     }
 
     function addNftToStorage(
-        mapping(uint256 => NftItem) storage tokenIdToItem,
-        NftItem memory nftItem
+        mapping(uint256 => NftItem) storage nftItems,
+        NftItem memory nftItem,
+        uint256 _tokenCounter
     ) public {
-        uint256 id = nftItem.tokenId;
-        tokenIdToItem[id] = nftItem;
+        uint256 tokenId = _tokenCounter;
+        nftItem.tokenId = tokenId;
+        nftItems[tokenId] = nftItem;
     }
 
     function getNftItem(
-        mapping(uint256 => NftItem) storage tokenIdToItem,
+        mapping(uint256 => NftItem) storage nftItems,
         uint256 _tokenId
     ) public view returns (NftItem memory) {
-        return tokenIdToItem[_tokenId];
+        return nftItems[_tokenId];
+    }
+
+    function getAllNftItems(
+        mapping(uint256 => NftItem) storage nftItems,
+        uint256 _nftItemCount
+    ) external view returns (NftItem[] memory) {
+        uint256 totalItems = _nftItemCount;
+        NftItem[] memory allNfts = new NftItem[](totalItems);
+
+        for (uint256 i = 0; i < totalItems; i++) {
+            allNfts[i] = nftItems[i];
+        }
+        return allNfts;
+    }
+
+    // get all nft items linked to a single user
+    function getAllUsersNftItems(
+        mapping(uint256 => NftItem) storage nftItems,
+        address _walletAddr,
+        uint256 _nftItemCount
+    ) external view returns (NftItem[] memory) {
+        uint256 totalItems = _nftItemCount;
+        NftItem[] memory allNfts = new NftItem[](totalItems);
+
+        for (uint256 i = 0; i < totalItems; i++) {
+            if (nftItems[i].owner == _walletAddr) {
+                allNfts[i] = nftItems[i];
+            }
+        }
+        return allNfts;
     }
 }
