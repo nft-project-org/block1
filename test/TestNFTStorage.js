@@ -88,7 +88,7 @@ contract("NFTStorage", function (accounts) {
       const nftItem = {
         tokenId: i,
         uri: "testUri",
-        price: i * 100,
+        price: (i + 5) * 100,
         owner: accounts[0], // Assign the item to one of the first three accounts
         creator: accounts[0], // The first account is the creator
         isListed: true,
@@ -104,7 +104,7 @@ contract("NFTStorage", function (accounts) {
       "Incorrect number of NFT items returned"
     )
 
-    for (let i = 6; i <= totalItems; i++) {
+    for (let i = 6; i < nftItems.length; i++) {
       assert.equal(nftItems[i].tokenId, i, "Incorrect NFT item token ID")
       assert.equal(nftItems[i].uri, "testUri", "Incorrect NFT item URI")
       assert.equal(nftItems[i].price, i * 100, "Incorrect NFT item price")
