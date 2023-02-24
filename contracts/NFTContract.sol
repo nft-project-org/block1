@@ -118,7 +118,7 @@ contract NFTContract is ERC721URIStorage, IERC721Receiver {
         require(msg.sender == owner, "You are not the owner of this NFT.");
 
         // transfer NFT ownership back to the original owner
-        safeTransferFrom(address(this), msg.sender, _tokenId);
+        _transfer(address(this), msg.sender, _tokenId);
 
         // delete stored token info
         delete tokenIdToOwner[_tokenId];

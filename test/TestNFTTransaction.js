@@ -199,4 +199,85 @@ contract("NFTContract", function (accounts) {
 
     assert.equal(tokenUri, expectedUri)
   })
+
+  it("should allow the owner to unlist the NFT", async () => {
+    // create a new token and list it
+    const instance = await NFTContract.deployed()
+    const tokenUri = "testUri"
+    const price = 10
+    const tx = await instance.createAndListToken(price, tokenUri, {
+      from: accounts[0],
+    })
+
+    let tokenId = 0
+    truffleAssert.eventEmitted(
+      tx,
+      "NFTListed",
+      (ev) => {
+        tokenId = ev._tokenId
+        return (
+          ev._lister === accounts[0] &&
+          ev._tokenUri === tokenUri &&
+          ev._price.toNumber() === price
+        )
+      },
+      "NftListed event should have been emitted with the correct values"
+    )
+
+    // unlist the token
+    await instance.unlistToken(tokenId, { from: accounts[0] })
+
+    // check that the token is no longer listed
+    const nftItem = await instance.getNftItem(tokenId)
+    const isListed = nftItem.isListed
+    assert.equal(isListed, false, "Token should not be listed after unlisting")
+
+    // check that the token owner is still the same
+    const owner = await instance.ownerOf(tokenId)
+    assert.equal(
+      owner,
+      accounts[0],
+      "Owner should still be the same after unlisting"
+    )
+  })
+
+  it("should not allow non-owners to unlist the NFT", async () => {
+    // create a new token and list it
+    const instance = await NFTContract.deployed()
+    const tokenUri = "testUri"
+    const price = 10
+    const tx = await instance.createAndListToken(price, tokenUri, {
+      from: accounts[0],
+    })
+
+    let tokenId = 0
+    truffleAssert.eventEmitted(
+      tx,
+      "NFTListed",
+      (ev) => {
+        tokenId = ev._tokenId
+        return (
+          ev._lister === accounts[0] &&
+          ev._tokenUri === tokenUri &&
+          ev._price.toNumber() === price
+        )
+      },
+      "NftListed event should have been emitted with the correct values"
+    )
+
+    // try to unlist the token from another account
+    await truffleAssert.reverts(
+      instance.unlistToken(tokenId, { from: accounts[1] }),
+      "You are not the owner of this NFT."
+    )
+
+    // check that the token is still listed
+    const nftItem = await instance.getNftItem(tokenId)
+    const isListed = nftItem.isListed
+    assert.equal(
+      isListed,
+      true,
+      "Token should still be listed after failed unlisting"
+    )
+  })
 })
