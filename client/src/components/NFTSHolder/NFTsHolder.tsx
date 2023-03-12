@@ -1,12 +1,20 @@
-import { Flex, Box } from "@chakra-ui/react"
+import { Flex, Box, Center, Heading } from "@chakra-ui/react"
 import { NFTCard } from "./NFTCard"
 
 interface PropsNFTsHolder {
     nfts: Array<any>;
 }
 
-export const NFTsHolder: React.FC<PropsNFTsHolder> = ({nfts}) => {
-    if (nfts.length < 1) return <Box>No NFTs listed yet. Be the first to list and take over the market</Box>
+export const NFTsHolder: React.FC<PropsNFTsHolder> = ({ nfts }) => {
+    if (nfts.length < 1) return (
+        <Center h="50vh">
+            <Box maxW="md" textAlign="center">
+                <Heading>
+                    No NFTs listed yet. Be the first to list and take over the market
+                </Heading>
+            </Box>
+        </Center>
+    )
 
     for (const i of nfts) {
         console.log(console.log(i[1]))

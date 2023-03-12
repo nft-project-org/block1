@@ -1,21 +1,37 @@
 import { BrowserProvider, Contract, ethers, formatEther, JsonRpcProvider, JsonRpcSigner } from "ethers"
 import { useEffect, useState, createContext } from "react";
-import { Box, Button, Flex, Input, Text, Heading, Center } from '@chakra-ui/react'
+import { Box, Button, Flex, Input, Text, Heading, Center, useDisclosure } from '@chakra-ui/react'
 import { nftContract } from './nftContractAbi'
 import { BrowserRouter as Router } from "react-router-dom"
 import { Navigate, Route, Routes } from "react-router"
 import Navbar from "./components/Navbar/Navbar";
 import { ListNFT } from "./components/ListNFT/ListNFT";
 import { NFTsHolder } from "./components/NFTSHolder/NFTsHolder";
+import { ConfirmBuyModal } from "./components/ConfirmBuyModal";
 
+interface SelectedNFT {
+  id: BigInt;
+  uri: string;
+  owner: string;
+  creator: string;
+  price: BigInt;
+}
 
 export const abi = nftContract.abi
-export const contractAddress = '0x18E684366a8083dED54a085B56efC289A9E1BAF3'
+export const contractAddress = '0xaf4A6eA84AE4d1295Eab92ec164a2c73ec77527B'
 type ContractContextType = {
   contract: Contract | null;
+  signer: JsonRpcSigner | null;
+  selectedNFT: SelectedNFT | null,
+  setSelectedNFT: any,
+  onOpen: any
 };
 export const ContractContext = createContext<ContractContextType>({
   contract: null,
+  signer: null,
+  selectedNFT: null,
+  setSelectedNFT: null,
+  onOpen: null
 });
 
 const App = () => {
@@ -29,6 +45,8 @@ const App = () => {
   const [listedNFTs, setListedNFTs] = useState([])
   const [contract, setContract] = useState<Contract | null>(null)
   const [accounts, setAccounts] = useState<Array<any>>([])
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const [selectedNFT, setSelectedNFT] = useState<SelectedNFT | null>(null)
 
   const getUserCount = async () => {
     const contract = new Contract(contractAddress, abi, signer)
@@ -79,11 +97,11 @@ const App = () => {
       </Center>
     )
   }
-  console.log("last listed nft: ", listedNFTs[listedNFTs.length-1])
   return (
     <Router>
-      <ContractContext.Provider value={{ contract }}>
+      <ContractContext.Provider value={{ contract, signer, selectedNFT, setSelectedNFT, onOpen }}>
         <Navbar />
+        <ConfirmBuyModal isOpen={isOpen} onClose={onClose} setListedNFTs={setListedNFTs} />
         <Center width='100%'>
           <Flex width='50%'>
             <Routes>

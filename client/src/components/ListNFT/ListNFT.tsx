@@ -18,9 +18,8 @@ export const ListNFT = ({setListedNFTs}: ListNFTProps) => {
 
     const tryListNFT = async () => {
         if (!contract) return
-        const tokenUri = 'https://i.seadn.io/gcs/files/e3a0758222c7d087116021f6a2696fec.jpg';
         try {
-            await contract.createAndListToken(BigInt(price), tokenUri);
+            await contract.createAndListToken(BigInt(price), uri);
         } catch (err: any) {
             toast({
                 title: err.message ? err.message : err,

@@ -1,4 +1,6 @@
 import { Box, Image, Text, VStack, Button, Flex } from '@chakra-ui/react';
+import { useContext } from 'react';
+import { ContractContext } from '../../App';
 
 interface NFTCardProps {
     id: BigInt;
@@ -9,6 +11,19 @@ interface NFTCardProps {
 }
 
 export const NFTCard = ({ id, uri, creator, price, owner }: NFTCardProps) => {
+    const { signer, setSelectedNFT, onOpen } = useContext(ContractContext)
+
+    const buyClicked = () => {
+        setSelectedNFT({
+            id,
+            uri,
+            creator,
+            price,
+            owner
+        })
+        onOpen()
+    }
+
     return (
         <VStack borderWidth="1px" borderRadius="lg" p='5'>
             <Image src={uri} alt={`NFT for sale`} />
@@ -39,7 +54,7 @@ export const NFTCard = ({ id, uri, creator, price, owner }: NFTCardProps) => {
                         {price.toString()} ETH
                     </Text>
                 </Box>
-                <Button mt={5}>Buy</Button>
+                <Button mt={5} isDisabled={owner.toLowerCase() === signer?.address?.toLowerCase()} onClick={buyClicked}>Buy</Button>
             </Flex>
         </VStack>
     );
