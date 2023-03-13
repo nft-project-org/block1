@@ -1,4 +1,4 @@
-import { BrowserProvider, Contract, ethers, formatEther, JsonRpcProvider, JsonRpcSigner } from "ethers"
+import { BrowserProvider, Contract, ethers, formatEther, JsonRpcProvider, JsonRpcSigner, Wallet } from "ethers"
 import { useEffect, useState, createContext } from "react";
 import { Box, Button, Flex, Input, Text, Heading, Center, useDisclosure } from '@chakra-ui/react'
 import { nftContract } from './nftContractAbi'
@@ -18,7 +18,8 @@ interface SelectedNFT {
 }
 
 export const abi = nftContract.abi
-export const contractAddress = '0xaf4A6eA84AE4d1295Eab92ec164a2c73ec77527B'
+export const contractAddress = '0xF2134910B5f049434514A17cF46c07e36ef09948'
+const apiKey = process.env.REACT_APP_NFURA_API_KEY
 type ContractContextType = {
   contract: Contract | null;
   signer: JsonRpcSigner | null;
@@ -59,19 +60,27 @@ const App = () => {
   }, [setAccounts, setProvider, setSigner, setBalance, setUserCount, setListedNFTs, setContract])
 
   const tryInitSession = async () => {
+    let accs = []
     try {
       // @ts-ignore
-      const accs = await window.ethereum.request({ method: "eth_requestAccounts" })
+      accs = await window.ethereum.request({ method: "eth_requestAccounts" })
       if (accs.length === 0) return
       setAccounts(accs)
     } catch (error: any) {
       console.log(error)
     }
-    const provider = new ethers.JsonRpcProvider()
-    const signer = await provider.getSigner()
+  
+    const provider = new ethers.InfuraProvider(
+      'goerli',
+      apiKey
+    )
+    // @ts-ignore
+    const browserProver = new ethers.BrowserProvider(window.ethereum);
+
+    const signer = await browserProver.getSigner();
     setProvider(provider)
     setSigner(signer)
-
+  
     const balance = await provider.getBalance(signer.address)
     setBalance(formatEther(balance))
     const contract = new Contract(contractAddress, abi, signer)

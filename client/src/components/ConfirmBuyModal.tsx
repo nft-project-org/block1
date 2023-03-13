@@ -16,6 +16,7 @@ export const ConfirmBuyModal = ({ isOpen, onClose, setListedNFTs }: ConfirmBuyMo
     const buyNFT = async () => {
         if (!contract) return
         try {
+            console.log(selectedNFT?.id)
             await contract.buyToken(selectedNFT?.id)
         } catch (err: any) {
             toast({

@@ -51,7 +51,7 @@ export const NFTCard = ({ id, uri, creator, price, owner }: NFTCardProps) => {
                         Price:
                     </Text>
                     <Text fontSize="sm" fontWeight="semibold">
-                        {price.toString()} ETH
+                        {price.toString()} WEI
                     </Text>
                 </Box>
                 <Button mt={5} isDisabled={owner.toLowerCase() === signer?.address?.toLowerCase()} onClick={buyClicked}>Buy</Button>
