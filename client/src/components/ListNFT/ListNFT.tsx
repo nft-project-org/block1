@@ -29,7 +29,7 @@ export const ListNFT = ({setListedNFTs}: ListNFTProps) => {
             return
         }
         toast({
-            title: 'New NFT listed!',
+            title: 'Processing new NFT. Metamask will notify when transction is ready',
             status: 'success',
             isClosable: true,
         })
@@ -59,7 +59,7 @@ export const ListNFT = ({setListedNFTs}: ListNFTProps) => {
                 </InputRightElement>
             </InputGroup>
             <Input
-                placeholder='price'
+                placeholder='price in WEI'
                 value={price}
                 onChange={({ target }) => setPrice(target.value)}
             />

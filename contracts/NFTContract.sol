@@ -143,6 +143,7 @@ contract NFTContract is ERC721URIStorage, IERC721Receiver {
 
         // set price to zero (not for sale anymore)
         tokenIdToPrice[_tokenId] = 0;
+        _nftStorage[_tokenId].isListed = false;
         // transfer the payment (ETH) to seller
         payable(seller).transfer(msg.value);
 

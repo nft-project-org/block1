@@ -1,4 +1,4 @@
-import { BrowserProvider, Contract, ethers, formatEther, JsonRpcProvider, JsonRpcSigner, Wallet } from "ethers"
+import { BrowserProvider, Contract, ethers, formatEther, JsonRpcProvider, JsonRpcSigner, Network, Wallet } from "ethers"
 import { useEffect, useState, createContext } from "react";
 import { Box, Button, Flex, Input, Text, Heading, Center, useDisclosure } from '@chakra-ui/react'
 import { nftContract } from './nftContractAbi'
@@ -18,21 +18,23 @@ interface SelectedNFT {
 }
 
 export const abi = nftContract.abi
-export const contractAddress = '0xF2134910B5f049434514A17cF46c07e36ef09948'
+export const contractAddress = '0x11D96Da3c3bAEaFD9079d061D50F5671a5E3f2b0'
 const apiKey = process.env.REACT_APP_NFURA_API_KEY
 type ContractContextType = {
   contract: Contract | null;
   signer: JsonRpcSigner | null;
-  selectedNFT: SelectedNFT | null,
-  setSelectedNFT: any,
-  onOpen: any
+  selectedNFT: SelectedNFT | null;
+  setSelectedNFT: any;
+  onOpen: any;
+  browserProvider: BrowserProvider | null;
 };
 export const ContractContext = createContext<ContractContextType>({
   contract: null,
   signer: null,
   selectedNFT: null,
   setSelectedNFT: null,
-  onOpen: null
+  onOpen: null,
+  browserProvider: null
 });
 
 const App = () => {
@@ -48,6 +50,8 @@ const App = () => {
   const [accounts, setAccounts] = useState<Array<any>>([])
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [selectedNFT, setSelectedNFT] = useState<SelectedNFT | null>(null)
+  const [network, setNetwork] = useState<Network | null>(null)
+  const [browserProvider, setBrowserProvider] = useState<BrowserProvider | null>(null)
 
   const getUserCount = async () => {
     const contract = new Contract(contractAddress, abi, signer)
@@ -74,18 +78,21 @@ const App = () => {
       'goerli',
       apiKey
     )
-    // @ts-ignore
-    const browserProver = new ethers.BrowserProvider(window.ethereum);
 
+    // Provider for local chain
+    // const provider = new ethers.JsonRpcProvider()
+    const network = await provider.getNetwork()
+    setNetwork(network)
+    // @ts-ignore
+    const browserProver = new ethers.BrowserProvider(window.ethereum)
+    setBrowserProvider(browserProver)
     const signer = await browserProver.getSigner();
     setProvider(provider)
     setSigner(signer)
-  
+
     const balance = await provider.getBalance(signer.address)
     setBalance(formatEther(balance))
     const contract = new Contract(contractAddress, abi, signer)
-    const response = await contract.getUserCount()
-    setUserCount(Number(response))
     const resNTFs = await contract.getAllNftItems()
     setListedNFTs(resNTFs)
     setContract(contract)
@@ -108,7 +115,7 @@ const App = () => {
   }
   return (
     <Router>
-      <ContractContext.Provider value={{ contract, signer, selectedNFT, setSelectedNFT, onOpen }}>
+      <ContractContext.Provider value={{ contract, signer, selectedNFT, setSelectedNFT, onOpen, browserProvider }}>
         <Navbar />
         <ConfirmBuyModal isOpen={isOpen} onClose={onClose} setListedNFTs={setListedNFTs} />
         <Center width='100%'>

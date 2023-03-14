@@ -19,7 +19,9 @@ export const NFTsHolder: React.FC<PropsNFTsHolder> = ({ nfts }) => {
     for (const i of nfts) {
         console.log(console.log(i[1]))
     }
-    const nftElements = [...nfts].reverse().map(nft => <NFTCard key={nft[0]} id={nft[0]} uri={nft[1]} price={nft[2]} owner={nft[3]} creator={nft[4]} />)
+    const nftElements = [...nfts].reverse().map(nft => 
+        <NFTCard key={nft[0]} id={nft[0]} uri={nft[1]} price={nft[2]} owner={nft[3]} creator={nft[4]} isListed={nft[5]}  />
+    )
 
     return (
         <Flex direction='column' width='100%'>

@@ -8,9 +8,10 @@ interface NFTCardProps {
     owner: string;
     creator: string;
     price: BigInt;
+    isListed: boolean;
 }
 
-export const NFTCard = ({ id, uri, creator, price, owner }: NFTCardProps) => {
+export const NFTCard = ({ id, uri, creator, price, owner, isListed }: NFTCardProps) => {
     const { signer, setSelectedNFT, onOpen } = useContext(ContractContext)
 
     const buyClicked = () => {
@@ -51,10 +52,13 @@ export const NFTCard = ({ id, uri, creator, price, owner }: NFTCardProps) => {
                         Price:
                     </Text>
                     <Text fontSize="sm" fontWeight="semibold">
-                        {price.toString()} WEI
+                        {isListed ? price.toString() + "WEI" : "Sold"} 
                     </Text>
                 </Box>
-                <Button mt={5} isDisabled={owner.toLowerCase() === signer?.address?.toLowerCase()} onClick={buyClicked}>Buy</Button>
+                { isListed ? 
+                    <Button mt={5} isDisabled={owner.toLowerCase() === signer?.address?.toLowerCase()} onClick={buyClicked}>Buy</Button> :
+                    <></>
+                }
             </Flex>
         </VStack>
     );

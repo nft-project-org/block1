@@ -2,6 +2,7 @@ import { Box, Image, Text, VStack, Button, Flex, useToast, Modal, ModalOverlay, 
 import { useContext } from 'react';
 import { useNavigate } from "react-router"
 import { ContractContext } from '../App';
+import { ethers } from 'ethers';
 
 interface ConfirmBuyModalProps {
     isOpen: boolean,
@@ -10,14 +11,20 @@ interface ConfirmBuyModalProps {
 }
 
 export const ConfirmBuyModal = ({ isOpen, onClose, setListedNFTs }: ConfirmBuyModalProps) => {
-    const { contract, selectedNFT } = useContext(ContractContext)
+    const { contract, selectedNFT, signer, browserProvider } = useContext(ContractContext)
     const toast = useToast()
 
     const buyNFT = async () => {
         if (!contract) return
         try {
             console.log(selectedNFT?.id)
-            await contract.buyToken(selectedNFT?.id)
+            const from = await signer?.getAddress()
+            const options = { 
+                from,
+                gasLimit: BigInt(10000000),
+                value: selectedNFT?.price
+            };
+           await contract.buyToken(selectedNFT?.id, options)
         } catch (err: any) {
             toast({
                 title: err.message ? err.message : err,
@@ -27,7 +34,7 @@ export const ConfirmBuyModal = ({ isOpen, onClose, setListedNFTs }: ConfirmBuyMo
             return
         }
         toast({
-            title: 'NFT bought succesfully!',
+            title: 'Processing buy. Metamask will notify when transction is ready',
             status: 'success',
             isClosable: true,
         })
@@ -65,7 +72,7 @@ export const ConfirmBuyModal = ({ isOpen, onClose, setListedNFTs }: ConfirmBuyMo
                                 Price:
                             </Text>
                             <Text fontSize="sm" fontWeight="semibold">
-                                {selectedNFT?.price.toString()} ETH
+                                {selectedNFT?.price.toString()} WEI
                             </Text>
                         </Box>
                         <Button mt={5} onClick={buyNFT}> Confirm</Button>
