@@ -26,7 +26,7 @@ export const NFTCard = ({ id, uri, creator, price, owner, isListed }: NFTCardPro
     }
 
     return (
-        <VStack borderWidth="1px" borderRadius="lg" p='5'>
+        <VStack borderWidth="1px" borderRadius="lg" p='5' m={5} backgroundColor={ isListed ? "#fcfcfc" : "#e8e6e6" }>
             <Image src={uri} alt={`NFT for sale`} />
             <Flex flexDirection='column'>
                 <Box alignItems="baseline" mt={3}>

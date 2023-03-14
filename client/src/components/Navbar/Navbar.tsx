@@ -13,12 +13,6 @@ const Navbar = () => {
             <Box p='4' fontSize='medium'>
                 <NavLink to='/list-nft'>List NFT</NavLink>
             </Box>
-            <Box p='4' fontSize='medium'>
-                <NavLink to='/my-nfts'>My NFTs</NavLink>
-            </Box>
-            <Box p='4' fontSize='medium'>
-                <NavLink to='/find-user'>Find User</NavLink>
-            </Box>
             <Spacer />
             <Box p='4' fontSize='medium'>
                 <Text>Your address: {signer?.address}</Text>

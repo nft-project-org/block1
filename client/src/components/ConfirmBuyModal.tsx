@@ -43,7 +43,7 @@ export const ConfirmBuyModal = ({ isOpen, onClose, setListedNFTs }: ConfirmBuyMo
     }
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose}>
+        <Modal isOpen={isOpen} onClose={onClose} size='xl'>
             <ModalOverlay />
             <ModalContent>
                 <VStack borderWidth="1px" borderRadius="lg" p='5'>

@@ -1,3 +1,5 @@
+App url: https://teal-snickerdoodle-127cfd.netlify.app/
+
 ### Install truffle and ganache
 <pre>
 npm install -g truffle
