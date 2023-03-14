@@ -59,11 +59,9 @@ contract NFTContract is ERC721URIStorage, IERC721Receiver {
         return _exists(_tokenId);
     }
 
-    function getTokenUri(uint256 _tokenId)
-        external
-        view
-        returns (string memory)
-    {
+    function getTokenUri(
+        uint256 _tokenId
+    ) external view returns (string memory) {
         return tokenURI(_tokenId);
     }
 
@@ -75,9 +73,10 @@ contract NFTContract is ERC721URIStorage, IERC721Receiver {
         return _walletAddr.balance;
     }
 
-    function createAndListToken(uint256 _price, string memory _tokenUri)
-        public
-    {
+    function createAndListToken(
+        uint256 _price,
+        string memory _tokenUri
+    ) public {
         require(_price > 0, "Price can't be 0!");
 
         uint256 tokenId = _tokenIdCounter.current();
@@ -111,7 +110,6 @@ contract NFTContract is ERC721URIStorage, IERC721Receiver {
         _tokenIdCounter.increment();
     }
 
-    // todo create test for this
     function unlistToken(uint256 _tokenId) public {
         // Check if person trying to unlist the NFT is the owner of the NFT
         address owner = tokenIdToOwner[_tokenId];
@@ -150,15 +148,15 @@ contract NFTContract is ERC721URIStorage, IERC721Receiver {
 
         tokenIdToOwner[_tokenId] = msg.sender;
 
+        _nftStorage.changeNftOwner(_tokenId, address(msg.sender));
+
         emit NftBought(seller, msg.sender, msg.value);
     }
 
     // get nft item containing details about the nft, such as owner, etc.
-    function getNftItem(uint256 _tokenId)
-        public
-        view
-        returns (NFTStorage.NftItem memory)
-    {
+    function getNftItem(
+        uint256 _tokenId
+    ) public view returns (NFTStorage.NftItem memory) {
         return _nftStorage.getNftItem(_tokenId);
     }
 
@@ -172,11 +170,9 @@ contract NFTContract is ERC721URIStorage, IERC721Receiver {
     }
 
     // list all nfts linked to a single user
-    function getAllUsersNftItems(address _walletAddr)
-        public
-        view
-        returns (NFTStorage.NftItem[] memory)
-    {
+    function getAllUsersNftItems(
+        address _walletAddr
+    ) public view returns (NFTStorage.NftItem[] memory) {
         return
             _nftStorage.getAllUsersNftItems(
                 _walletAddr,
@@ -199,11 +195,9 @@ contract NFTContract is ERC721URIStorage, IERC721Receiver {
     }
 
     // details include wallet address, and different arrays containing info about ownedNfts, boughtNfts, etc.
-    function getUserDetails(address _walletAddr)
-        public
-        view
-        returns (UserInfo.User memory)
-    {
+    function getUserDetails(
+        address _walletAddr
+    ) public view returns (UserInfo.User memory) {
         return _userInfo.getUserDetails(_walletAddr);
     }
 

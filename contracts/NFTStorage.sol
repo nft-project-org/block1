@@ -23,6 +23,14 @@ library NFTStorage {
         nftItems[tokenId] = nftItem;
     }
 
+    function changeNftOwner(
+        mapping(uint256 => NftItem) storage nftItems,
+        uint256 _tokenId,
+        address _walletAddr
+    ) public {
+        nftItems[_tokenId].owner = _walletAddr;
+    }
+
     function getNftItem(
         mapping(uint256 => NftItem) storage nftItems,
         uint256 _tokenId
